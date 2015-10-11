@@ -28,20 +28,20 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
   @Override
   public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resparam) throws Throwable 
   {
-	// load resource
-	XC_LayoutInflated loadPackage = new XC_LayoutInflated() {
+	  // load resource
+	  XC_LayoutInflated loadPackage = new XC_LayoutInflated() {
 		
-	  @Override
-	  public void handleLayoutInflated(LayoutInflatedParam liparam) throws Throwable 
-	  {
-	    Log.d(TAG,"handleLayoutInflated");
-	    btn_search_id = liparam.res.getIdentifier("btn_search", "id", "com.microntek.radio");
-	    Log.d(TAG,"btn_search="+btn_search_id);
-      }
-	};
+      @Override
+      public void handleLayoutInflated(LayoutInflatedParam liparam) throws Throwable 
+      {
+        Log.d(TAG,"handleLayoutInflated");
+        btn_search_id = liparam.res.getIdentifier("btn_search", "id", "com.microntek.radio");
+        Log.d(TAG,"btn_search="+btn_search_id);
+       }
+	  };
 	  
     if (!resparam.packageName.equals("com.microntek.radio")) return;
-	resparam.res.hookLayout("com.microntek.radio", "layout", "radio", loadPackage);
+    resparam.res.hookLayout("com.microntek.radio", "layout", "radio", loadPackage);
     Log.d(TAG,"com.microntek.radio resource hook OK");
   }
   
@@ -53,15 +53,16 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
 	           
       @Override
       protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-    	Log.d(TAG,"onCreate");
+        Log.d(TAG,"onCreate");
       	mtcRadio = ((Activity)param.thisObject);
+      	mUi = (OnClickListener)XposedHelpers.getObjectField(mtcRadio,"mUi");
         // показать версию модуля
         try 
         {
-     	  Context context = mtcRadio.createPackageContext(getClass().getPackage().getName(), Context.CONTEXT_IGNORE_SECURITY);
-     	  String version = context.getString(R.string.app_version_name);
+          Context context = mtcRadio.createPackageContext(getClass().getPackage().getName(), Context.CONTEXT_IGNORE_SECURITY);
+          String version = context.getString(R.string.app_version_name);
           Log.d(TAG,"version="+version);
-     	} catch (NameNotFoundException e) {}
+        } catch (NameNotFoundException e) {}
       	// кнопка поиска
       	Button btnSearch = (Button)mtcRadio.findViewById(btn_search_id);
       	if (btnSearch != null)
@@ -77,7 +78,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
       }
     };
     
-	// start hooks  
+    // start hooks  
     if (!lpparam.packageName.equals("com.microntek.radio")) return;
     Log.d(TAG,"package com.microntek.radio");
     XposedHelpers.findAndHookMethod("com.microntek.radio.RadioActivity", lpparam.classLoader, "onCreate", Bundle.class, onCreate);
@@ -89,8 +90,9 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
   {
     public boolean onLongClick(View v)
     {
-      mUi.onClick(v);
-	  return true;
+      if (mUi != null)
+        mUi.onClick(v);
+      return true;
     }
   };
   
